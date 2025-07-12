@@ -1,0 +1,58 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>  //Header file to use sleep().
+#include <pthread.h>
+  
+int xx=0;
+int threads_num=0;
+int loop_count = 0;
+
+// A normal C function that is executed as a thread. 
+// Specified as argument in pthread_create()
+void *myThreadFun(void *varset)
+{
+    pthread_t procID;
+    procID = pthread_self();  // obtain the process ID of this thread
+
+    printf(">>Now inside myThreadFun for thread %ld \n", procID);
+    printf(">>threads_num in child is %d \n", threads_num);
+    printf(">>Child %ld can do some stuff here... \n", procID);
+    // for example, note that changes in xx are visible from parent and other threads
+    xx +=1;
+    printf(">>xx in child %ld is %d \n", procID, xx);
+    printf(">>Thread %ld is exiting now \n", procID);
+    
+    // This thread is finished so decrement the count of running threads
+    threads_num--;
+    return NULL;
+} // Thread code ends here
+
+   
+int main()
+{
+    pthread_t thread_id[10];  // Specify max number of threads to be created
+    
+    while (loop_count < 5) {
+      if (threads_num > 2) { continue; } // Do not create more than 3 threads at a time
+      printf("---------\nParent iteration %d\n", loop_count);
+      printf("Current threads_num %d\n", threads_num);
+      
+      printf("Before Thread\n");
+      threads_num++;
+      pthread_create(&thread_id[loop_count], NULL, myThreadFun, NULL);
+      printf("current thread-id is %ld \n", thread_id[loop_count]);
+      
+      pthread_join(thread_id[loop_count], NULL);  // This will make the parent wait until child finishes
+      printf("After Thread\n");
+      printf("xx in parent is %d \n", xx);
+
+    loop_count++;
+    }  // End Parent loop
+    
+    sleep(5); // Wait for all the threads to finish
+    // or wait for the last child to join
+    pthread_join(thread_id[loop_count], NULL);
+        
+    exit(0);
+}
+
