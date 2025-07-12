@@ -1,0 +1,224 @@
+#include<stdio.h>
+#include <stdlib.h>
+#include <unistd.h>  //Header file to use sleep().
+#include <pthread.h>
+#include <stdbool.h>
+
+// int xx=0;
+// int threads_num=0;
+// int loop_count = 0;
+
+int threadNum = 0;
+int compTime = 0;
+int CPUBurstTime[10];
+int actProcess = 0;
+int pauseTime = 0;
+int numThreads = 0;
+
+
+
+
+void calculateWaitingTime(int n, int burst_time[], int waiting_time[]){
+    waiting_time[0] = 0;
+    
+    for(int i = 1; i < n; i++){
+        waiting_time[i] = burst_time[i-1] + waiting_time[i-1];
+    }
+}
+
+void calculateTurnAroundTime(int n, int burst_time[], int waiting_time[], int turnaround_time[]){
+    for(int i = 0; i < n; i++){
+        turnaround_time[i] = burst_time[i] + waiting_time[i];
+    }
+}
+
+void calculateAndDisplayAverages(int n, int burst_time[], int waiting_time[], int turnaround_time[]){
+    float total_waiting_time = 0;
+    float total_turnaround_time = 0;
+    
+    for(int i = 0; i < n; i++){
+        total_waiting_time += waiting_time[i];
+        total_turnaround_time += turnaround_time[i];
+    }
+    
+    printf("\nAverage Waiting Time: %.2f\n", total_waiting_time / n);
+    printf("\nAverage Turnaround Time: %.2f\n", total_turnaround_time / n);
+}
+
+
+
+
+typedef struct {
+    int bursts[10];
+    int front;
+    int back;
+} Queue;
+
+void initializeQueue(Queue* q){
+    q->front = -1;
+    q->back = 0;
+}
+
+bool isFull(Queue* q){
+    return (q->back == 10);
+}
+
+bool isEmpty(Queue* q){
+    return (q->front == q->back - 1);
+}
+
+void enqueue(Queue* q, int value){
+    if(isFull(q)){
+        printf("Queue is full\n");
+    }
+    else{
+        q->bursts[q->back] = value;
+        q->back++; 
+    }
+}
+
+void dequeue(Queue* q){
+    if(isEmpty(q)){
+        printf("Queue is empty\n");
+        return;
+    }
+    else{
+       q->front++; 
+    }
+}
+
+int peek(Queue* q){
+    if(isEmpty(q)){
+        printf("Queue is empty\n");
+        return -1;
+    }
+    else{
+        return q->bursts[q->front + 1];
+    }
+}
+
+void printQueue(Queue* q){
+    if(isEmpty(q)){
+        printf("Queue is empty\n");
+        return;
+    }
+    else{
+        printf("P: ");
+        for(int i = q->front + 1; i < q->back; i++){
+            printf("%d ", q->bursts[i]);
+        }
+        printf("\n");
+    }
+    
+}
+
+int getProcID(Queue* q, int value, int processes[], int burst_time[], int n){
+    for(int i = 0; i < n; i++){
+        if(burst_time[i] == value){
+            break;
+        }
+        return i;
+        //printf("%d\n", i)
+    }
+    
+    
+}
+
+Queue* Threading(Queue* q, Queue* c1, Queue* c2, int processes[], int burst_time[], int n){
+    
+    int coreOne = q->front;
+    int id1 = getProcID(q, q->front, processes, burst_time, n);
+    enqueue(c1, id1);
+    
+    int coreTwo = q->front + 1;
+    int id2 = getProcID(q, q->front + 1, processes, burst_time, n);
+    enqueue(c2, id2);
+    
+    dequeue(q);
+    dequeue(q);
+    
+    while(!isEmpty(q)){
+        if(coreOne < coreTwo){
+            coreOne -= coreOne;
+            coreTwo = coreTwo - coreOne;
+        }
+        else if(coreOne > coreTwo){
+            coreOne = coreOne - coreTwo;
+            coreTwo -= coreTwo;
+        }
+    
+        if(coreOne == 0){
+            int c1ID = getProcID(q, q->front, processes, burst_time, n);
+            enqueue(c1, c1ID);
+            dequeue(q);
+            coreOne = q->front;
+        }
+        else if(coreTwo == 0){
+            int c2ID = getProcID(q, q->front, processes, burst_time, n);
+            enqueue(c2, c2ID);
+            dequeue(q);
+            coreTwo = q->front;
+        }
+    }
+    return c1, c2;
+}
+
+int main() {
+    int n;
+    
+    printf("Enter the number of processes: ");
+    scanf("%d", &n);
+    
+    int processes[n];
+    int burst_time[n];
+    int waiting_time[n];
+    int turnaround_time[n];
+    
+    pthread_t thread1;
+    pthread_t thread2;
+    
+    for(int i = 0; i < n; i++){
+        processes[i] = i;
+    }
+    
+    //pthread_create(&thread1,NULL,coreOne,NULL);
+    for(int i = 0; i < n; i++){
+        processes[i] = i;
+        int burst;
+        printf("Enter CPUBurstTime for P%d: ", i);
+        scanf("%d", &burst);
+        burst_time[i] = burst;
+    }
+    
+    Queue c1;
+    initializeQueue(&c1);
+    
+    Queue c2;
+    initializeQueue(&c2);
+    
+    Queue q;
+    initializeQueue(&q);
+    
+    for(int i = 0; i < n; i++){
+        enqueue(&q, burst_time[i]);
+    }
+    
+    for(int i = 0; i < n; i++){
+        processes[i] = i;
+    }
+    
+    //printQueue(&q);
+    
+    Threading(&q, &c1, &c2, processes, burst_time, n);
+    
+    printf("Core1: ");
+    printQueue(&c1);
+    printf("Core2: ");
+    printQueue(&c2);
+    
+    
+    
+    
+        
+    exit(0);
+}
