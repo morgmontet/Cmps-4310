@@ -1,0 +1,56 @@
+#include<stdio.h>
+#include<string.h>
+#include<pthread.h>
+#include<stdlib.h>
+#include<unistd.h>
+
+pthread_t tid[2]; // Declared array of threads 
+int counter;
+pthread_mutex_t lock;  // Declare the mutex (but it's not initialized yet)
+
+void* doSomeThing(void *arg)
+{
+    pthread_mutex_lock(&lock); // Get a lock on the mutex
+
+    counter += 1;
+    printf("\n Job %d started\n", counter);
+
+ sleep(2);
+
+    printf("\n Job %d finished\n", counter);
+
+    pthread_mutex_unlock(&lock); // Release the mutex
+
+    return NULL;
+}
+
+int main(void)
+{
+    int i = 0;
+    int err;
+
+    if (pthread_mutex_init(&lock, NULL) != 0) // Initialize the mutex and report otherwise
+    {
+        printf("\n mutex init failed\n");
+        return 1;
+    }
+
+    while(i < 2)
+    {
+        // Spawn threads which execute "doSomeThing"
+        err = pthread_create(&(tid[i]), NULL, &doSomeThing, NULL);
+        if (err != 0)
+            printf("\ncan't create thread :[%s]", strerror(err));
+        i++;
+    }
+
+    // Wait for threads to finish
+    pthread_join(tid[0], NULL);
+    pthread_join(tid[1], NULL);
+    
+    pthread_mutex_destroy(&lock);  // Destroy the mutex
+
+    return 0;
+}
+
+
