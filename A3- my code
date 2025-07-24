@@ -1,0 +1,106 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+
+#define NUM_STOCKS 6
+#define NUM_THREADS 15
+
+int stock_inventory[NUM_STOCKS] = {11,20,5,1,8,12};
+pthread_mutex_t locks[NUM_STOCKS];
+
+typedef struct {
+    int stock;
+    int task;
+} ThreadData;
+
+ThreadData Events[NUM_THREADS] = {
+    {0,-5},
+    {3,-3},
+    {1,-10},
+    {2,3},
+    {3,8},
+    {5,-10},
+    {4,4},
+    {0,3},
+    {1,8},
+    {5,-5},
+    {2,6},
+    {4,5},
+    {0,-12},
+    {3,5},
+    {0,8}
+};
+
+ void* threadFunction(void* arg){
+     int thread_id = *((int*)arg);
+     ThreadData thread = Events[thread_id];
+     //int count = 0;
+     int wait[10][2]={
+         {0,0},
+         {0,0},
+         {0,0},
+         {0,0},
+         {0,0},
+         {0,0},
+         {0,0},
+         {0,0},
+         {0,0},
+         {0,0}
+     };
+    
+     printf("Thread ID: %d\n", thread_id);
+     printf("Event: Stock(%d), Task (%d)\n", thread.stock, thread.task);
+     
+     if(stock_inventory[thread.stock] > 0){
+         pthread_mutex_lock(&locks[thread.stock]);
+         stock_inventory[thread.stock] = stock_inventory[thread.stock] + thread.task;
+         pthread_mutex_unlock(&locks[thread.stock]);
+     }
+     
+    //  else if(stock_inventory[thread.stock] < 0){
+    //      for(int i = 0; )
+    //       //put [thread.stock,thread.task] in wait
+    //  }
+     
+    //  for(int i = 0; i < 10; i++){
+    //      printf("%d", wait[i]);
+    //  }
+     
+     
+     free(arg);
+     pthread_exit(NULL);
+ }
+ 
+int main()
+{
+    pthread_t threads[NUM_THREADS];
+    
+    for(int i = 0; i < NUM_STOCKS; i++){
+        pthread_mutex_init(&locks[i], NULL);
+    }
+    
+    for(int i = 0; i < NUM_THREADS; i++){
+        int* thread_id = malloc(sizeof(int));
+        *thread_id = i;
+        
+        if(pthread_create(&threads[i], NULL, threadFunction, thread_id) != 0){
+            fprintf(stderr, "Failed to create thread %d\n", i);
+            exit(1);
+        }
+    }
+    
+    for(int i = 0; i < NUM_THREADS; i++){
+        pthread_join(threads[i], NULL);
+    }
+    
+    for(int i = 0; i < NUM_STOCKS; i++){
+        pthread_mutex_destroy(&locks[i]);
+    }
+    
+    printf("Final Stock Inventory:\n");
+    for(int i = 0; i < NUM_STOCKS; i++){
+        printf("Stock%d: %d\n", i, stock_inventory[i]);
+    }
+    
+    return 0;
+}
