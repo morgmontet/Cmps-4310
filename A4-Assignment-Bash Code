@@ -1,0 +1,24 @@
+#!/bin/bash
+
+prefix="$2"
+counter=0
+
+if [ -z "$1" ]; then
+    echo "Error: The first argument (directory path) is missing."
+    exit 1
+fi
+
+mydir="$1"
+
+if [ ! -d "$mydir" ]; then
+    echo "Error: '$mydir' is not a valid directory."
+    exit 1
+fi
+
+for file in "$mydir"/*; do
+    if [ -f "$file" ]; then
+        filename=$(basename "$file")
+        counter=$((counter + 1))
+        mv "$file" "$mydir/${prefix}${counter}${filename}"
+    fi
+done
