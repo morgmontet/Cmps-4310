@@ -1,0 +1,40 @@
+date #This should produce the date
+mkdir your_fname #This should create a directory your_fname
+ls #This should produce a list of files and sub-directories
+mkdir your_lstnam
+ls
+echo 'this is a test' #This should echo back the message
+echo 'this is a test' > somefile.txt #These will create new files containing the echo message
+echo 'this is fun' > otherfile.txt
+echo 'I like this' > myfile.txt
+cp *.txt your_fname #This will copy all the .txt files into dir your_fname
+cp *.txt your_lstnam #similarly copied here
+cd your_lstnam #This will bring you to directory your_fname
+pwd #This should report that you are in directory your_fname
+ls
+ls -l #Produces a list of files with attributes
+echo 'this is getting interesting' > my2ndfile.txt #create yet another file inside your_lname
+ls
+ls .. #Lists files in the parent directory (..)
+myvar=$(ls -l) #Creates a variable containing a file list
+echo $myvar #Prints the variable
+echo "Alpha\nBeta\nGamma" #Notice the difference between this and the next command
+echo -e "Alpha\nBeta\nGamma" # [Look up the purpose of the -e flag]
+echo -e "Alpha\nBeta\nGamma" > data.txt
+cat data.txt #prints the contents of data.txt
+pwd
+cd .. #Takes you to the parent directory
+pwd #Reports the current directory
+ls -l
+ls your_fname #Produces a list of files of the dir your_fname
+ls your_fname/* #Alternative of above (with paths)
+myvar=$(date +%Y_%m_%d_%H_%M_%S) #Produces date in specified format; places it in variable
+echo $myvar
+cp your_lstnam/my2ndfile.txt . #Copy the file my2ndfile.txt from your_lstnam here (.)
+cp your_fname/somefile.txt my3rdfile.txt #Copy the file somefile.txt here but name it my3rdfile.txt
+ls -l
+rm somefile.txt #Delete (remove) the file somefile.txt
+mv otherfile.txt renamed.txt #Move (and rename) the file otherfile.txt
+ls
+cd
+history > myhist.txt #Produce the history and direct it to a file
